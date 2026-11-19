@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>아라고 띄어쓰기 퀴즈</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f4f6f8;color:#171717;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif}
+.wrap{max-width:720px;margin:auto;padding:22px 16px 60px}
+.card{background:#fff;border:1px solid #e1e4e8;border-radius:24px;padding:26px 22px;box-shadow:0 8px 28px rgba(0,0,0,.05)}
+h1{font-size:25px;margin:0 0 10px}.sub{color:#666;line-height:1.6;margin-bottom:24px}
+.top{display:flex;justify-content:space-between;gap:10px;align-items:center;font-weight:700;margin-bottom:16px}
+.badge{background:#f1f2f4;border-radius:999px;padding:8px 12px;font-size:14px}
+.progress{height:9px;background:#eceeef;border-radius:99px;overflow:hidden;margin:12px 0 28px}.bar{height:100%;background:#171717;width:0}
+.instruction{font-size:15px;color:#666;margin-bottom:16px}
+.sentence{display:flex;flex-wrap:wrap;align-items:center;gap:0;line-height:1.8;padding:18px 4px 26px;user-select:none;-webkit-user-select:none}
+.char{font-size:29px;font-weight:700;white-space:pre}
+.gap{width:12px;height:46px;position:relative;cursor:pointer;flex:0 0 12px;border-radius:8px;transition:.15s}
+.gap:after{content:"";position:absolute;left:5px;top:8px;bottom:8px;width:2px;background:#d9dde2;border-radius:2px}
+.gap.active{width:32px;flex-basis:32px;background:#eaf5ff}
+.gap.active:after{left:15px;background:#2095e8;width:3px}
+button{width:100%;border:0;border-radius:16px;padding:17px;font-size:18px;font-weight:700;cursor:pointer}
+.primary{background:#171717;color:#fff}.secondary{background:#eef0f2;color:#222;margin-top:10px}
+.feedback{display:none;margin-top:20px;padding:18px;border-radius:16px;line-height:1.65}
+.feedback.ok{display:block;background:#edf8f0}.feedback.no{display:block;background:#fff1f0}
+.answerline{font-size:18px;font-weight:700;margin:7px 0} .explain{margin-top:8px}
+.start{text-align:center;padding:20px 4px}.start h1{font-size:28px}.start p{line-height:1.7;color:#666}
+.hidden{display:none}
+@media(max-width:480px){.wrap{padding:12px 10px 40px}.card{padding:22px 16px;border-radius:22px}.char{font-size:26px}.gap{width:10px;flex-basis:10px}.gap.active{width:27px;flex-basis:27px}}
+</style>
+</head>
+<body>
+<div class="wrap"><div class="card">
+<section id="start" class="start">
+<h1>아라고 띄어쓰기 퀴즈</h1>
+<p>글자 사이를 눌러 직접 띄어쓰기를 만들어 보세요.<br>선택한 곳을 다시 누르면 붙일 수 있습니다.</p>
+<button class="primary" onclick="startQuiz()">시작하기</button>
+</section>
+<section id="quiz" class="hidden">
+<div class="top"><span id="num"></span><span class="badge" id="score">정답 0 · 오답 0</span></div>
+<div class="progress"><div class="bar" id="bar"></div></div>
+<div class="instruction">띄어야 할 <b>글자 사이</b>를 터치하세요.</div>
+<div class="sentence" id="sentence"></div>
+<button class="primary" id="check" onclick="checkAnswer()">정답 확인</button>
+<div id="feedback" class="feedback"></div>
+<button class="secondary hidden" id="next" onclick="nextQuestion()">다음 문제</button>
+</section>
+<section id="finish" class="start hidden">
+<h1>완료!</h1><p id="final"></p>
+<button class="primary" onclick="restartQuiz()">다시 풀기</button>
+</section>
+</div></div>
+<script>
+const BANK=[{"q":"나는포기할수밖에없었다.","answers":["나는 포기할 수밖에 없었다."],"e":"이때의 '수'는 앞말 '포기할'의 수식을 받는 의존 명사이므로 띄어 써야 한다. '밖에'는 앞말의 수식을 받는 것이 아닌 체언 '수' 뒤에 붙어 쓰인 조사이므로 붙여 써야 한다."},{"q":"건물밖에학생들이있다.","answers":["건물 밖에 학생들이 있다."],"e":"'밖에'는 여기서 명사 '밖'에 조사 '에'가 결합한 말로, '건물'과 '밖'은 각기 다른 명사이기 때문에 띄어 써야 한다."},{"q":"내가사랑하는것은돈밖에없다.","answers":["내가 사랑하는 것은 돈밖에 없다."],"e":"것'은 의존명사이므로 앞말과 띄어 쓴다. 이 문장에서 '밖에'는 'outside'가 아니고 'only'의 의미로 쓰인 조사이므로 붙여 쓴다."},{"q":"남을따르기보다앞서가자.","answers":["남을 따르기보다 앞서가자."],"e":"이때의 '보다'는 조사이므로 앞말에 붙여 쓴다. '앞서가다'는 한 단어이므로 붙여 쓴다."},{"q":"네가들은바가맞다.","answers":["네가 들은 바가 맞다."],"e":"'바'는 앞말 '들은'의 수식을 받는 의존 명사이므로 앞말과 띄어 쓴다."},{"q":"길에장미꽃한송이가피어있다.","answers":["길에 장미꽃 한 송이가 피어 있다.","길에 장미꽃 한 송이가 피어있다."],"e":"한 송이'처럼 수와 단위 사이는 띄어 쓴다. '피어 있다'는 본용언+보조용언으로, 띄어 쓰는 것이 원칙이고 붙여 쓰는 것도 허용된다."},{"q":"나만이그일을한시간만에해낼수있다.","answers":["나만이 그 일을 한 시간 만에 해낼 수 있다."],"e":"나만'의 '만'은 '나'라는 체언이 취하는 조사이므로 붙여 쓴다. '한 시간 만에'의 '만'은 '시간, 거리, 횟수의 '동안'이나 '끝''을 의미하는 의존명사로, 앞말과 띄어 쓴다."},{"q":"이공간에우리다섯뿐이야.","answers":["이 공간에 우리 다섯뿐이야."],"e":"이때의 '뿐'은 의존 명사가 아닌 체언 '다섯' 뒤에 붙은 조사이므로 붙여 써야 한다."},{"q":"하라는대로했을뿐이야.","answers":["하라는 대로 했을 뿐이야."],"e":"이때의 '대로'는 앞의 관형어 '하라는'의 수식을 받는 의존 명사이므로 띄어 써야 한다."},{"q":"믿을것은너뿐이라서나는따라갈뿐이야.","answers":["믿을 것은 너뿐이라서 나는 따라갈 뿐이야."],"e":"너뿐'의 '뿐'은 체언 '너' 뒤에 결합한 조사이므로 붙여 쓴다. '따라갈 뿐이야'의 '뿐'은 관형어 '따라갈'의 수식을 받는 의존명사 '뿐'이므로 앞말과 띄어 쓴다."},{"q":"날이밝는대로떠나라.","answers":["날이 밝는 대로 떠나라."],"e":"이때의 '대로'는 앞의 관형어 '밝는'의 수식을 받는 의존 명사이므로 띄어 써야 한다."},{"q":"네마음대로해.","answers":["네 마음대로 해."],"e":"이때의 '대로'는 앞의 수식을 받는 것이 아니라 체언 '마음'의 뒤에 붙어 쓰인 조사이므로 붙여 써야 한다."},{"q":"너는너대로네가하던대로해.","answers":["너는 너대로 네가 하던 대로 해."],"e":"너대로'의 '대로'는 체언 '너' 뒤에 결합한 조사이므로 붙여 쓴다. '하던 대로'의 '대로'는 관형어 '하던'의 수식을 받는 의존명사이므로 앞말과 띄어 쓴다."},{"q":"청군대백군경기가내일아침에열린다.","answers":["청군 대 백군 경기가 내일 아침에 열린다."],"e":"말을 이어 줄 때 쓰는 '대'는 'A 대 B'로 띄어 쓴다."},{"q":"그는국장겸과장의직책을맡았다.","answers":["그는 국장 겸 과장의 직책을 맡았다."],"e":"말을 이어 줄 때 쓰는 '겸'은 'A 겸 B'로 띄어 쓴다."},{"q":"이사과대단히맛있는데?","answers":["이 사과 대단히 맛있는데?"],"e":"문장 끝에 쓰여 화자의 놀라움, 감탄을 나타내는 어미 '-는데'의 쓰임에 해당한다. '장소'를 뜻하는 의존명사 '데'가 아니다."},{"q":"어디맛있는데아는곳없어?","answers":["어디 맛있는 데 아는 곳 없어?"],"e":"'데'는 앞의 관형어 '맛있는'의 수식을 받는 의존 명사이므로 띄어 쓴다. '곳'은 자립 명사이므로 앞말과 띄어 쓴다."},{"q":"나는문제를열두시간만에해결했다.","answers":["나는 문제를 열두 시간 만에 해결했다."],"e":"시간'은 단위이므로 띄어 써야 하며, '만'은 앞에 '시간 동안'이라는 의미가 오면 의존 명사로 쓰이는 것이므로 띄어 써야 한다."},{"q":"너만보면정말눈부셔.","answers":["너만 보면 정말 눈부셔."],"e":"너만'의 '만'은 앞말의 수식을 받는 의존 명사가 아니라 체언 '너' 뒤에 결합한 only라는 의미를 갖는 조사이므로 붙여 써야 한다."},{"q":"나에게양말두켤레를줘라.","answers":["나에게 양말 두 켤레를 줘라."],"e":"켤레'는 단위이므로 숫자와 띄어 써야 한다. 이때 숫자는 순서가 아닌 수량을 나타내기 때문에 붙여 쓸 수 없다."},{"q":"그는열두살인데지식은어른만큼많다.","answers":["그는 열두 살인데 지식은 어른만큼 많다."],"e":"살'은 단위이므로 띄어 써야 한다. 이때의 '만큼'은 앞말의 수식을 받는 것이 아니라 체언 '어른' 뒤에 붙어 쓰인 조사이므로 붙여 써야 한다."},{"q":"그는공부를시작한지일년이지났다.","answers":["그는 공부를 시작한 지 일 년이 지났다."],"e":"이때의 '지'는 '시간 동안'이라는 의미로, 앞말 '시작한'의 수식을 받는 의존 명사이므로 띄어 써야 한다."},{"q":"조명이꺼져서축구를못했다.","answers":["조명이 꺼져서 축구를 못 했다."],"e":"하지 못했다'라는 의미의 '못 하다'는 띄어 쓴다."},{"q":"그는나보다공부를못했다.","answers":["그는 나보다 공부를 못했다."],"e":"능력이 부족하다'라는 의미의 '못하다'는 붙여 쓴다."},{"q":"밥이아직안됐다.","answers":["밥이 아직 안 됐다."],"e":"잘못되었다'는 뜻이 아닌, '되지 않았다'라는 의미를 갖는 '안 되다'는 부정 부사 '안'이 별개의 단어인 '되다'를 꾸며 주는 형태이므로 단어와 단어 사이는 띄어 쓴다는 규정에 의해 띄어 쓴다."},{"q":"그사람의사연은참안됐다.","answers":["그 사람의 사연은 참 안됐다."],"e":"딱하다'라는 의미를 갖는 '안되다'는 한 단어이므로 붙여 쓴다."},{"q":"그는삼학년이다.","answers":["그는 삼 학년이다.","그는 삼학년이다."],"e":"단위를 나타내는 말은 띄어 쓰지만, 수량이 아닌 순서를 나타내는 것은 붙여 쓸 수 있다는 규정에 의하여 '삼 학년'이 원칙, '삼학년'이 허용이다."},{"q":"초원에말이6마리가있다.","answers":["초원에 말이 6 마리가 있다.","초원에 말이 6마리가 있다."],"e":"단위를 나타내는 말은 띄어 쓰지만, 아라비아 숫자와 어울려 쓰이는 경우는 붙여 쓸 수 있으므로 '6 마리'가 원칙, '6마리'가 허용이다. (다만 숫자와 어울려 쓰이는 경우는 원칙 표기보다 허용 표기가 보편적으로 자리잡고 있다.)"},{"q":"이재명은우리나라의이십일대대통령이다.","answers":["이재명은 우리나라의 이십일 대 대통령이다.","이재명은 우리나라의 이십일대 대통령이다."],"e":"단위를 나타내는 말은 띄어 쓰지만, 수량이 아닌 순서를 나타내는 것은 붙여 쓸 수 있다는 규정에 의하여 '이십일 대'가 원칙, '이십일대'가 허용이다."},{"q":"그의집은육층이다.","answers":["그의 집은 육 층이다.","그의 집은 육층이다."],"e":"단위를 나타내는 말은 띄어 쓰지만, 수량이 아닌 순서를 나타내는 것은 붙여 쓸 수 있다는 규정에 의하여 '육 층'이 원칙, '육층'이 허용이다."},{"q":"그음식은먹을만해.","answers":["그 음식은 먹을 만해.","그 음식은 먹을만해."],"e":"만하다'는 보조용언이므로 원칙적으로 띄어 써야 하지만 앞말에 붙여 쓰는 것도 허용하므로, '먹을 만해'와 '먹을만해'가 둘 다 허용된다. "},{"q":"야너나그돈안준지몇주좀더된것왜말안해?","answers":["야 너 나 그 돈 안 준 지 몇 주 좀 더 된 것 왜 말 안 해?"],"e":"'시간 동안'을 나타내는 '지'는 의존명사이므로 띄어 쓴다. '몇 주'의 '주'는 단위를 나타내는 말이므로 띄어 쓴다. '것'은 의존명사이므로 띄어 쓰며, '안 하다' 역시 부정 부사 '안' 뒤의 '하다'는 서로 다른 단어이므로 띄어 쓴다."},{"q":"여기에서부터만이라도쉬었다가자.","answers":["여기에서부터만이라도 쉬었다 가자."],"e":"'에서, 부터, 만, 이라도'는 전부 조사이므로 앞말에 붙여 쓴다. '쉬었다 가자'에서 '가자'는 보조용언이 아닌 본용언이므로 앞말과 띄어 써야 한다."},{"q":"우리같이영화보러바람같이갔다올래?","answers":["우리 같이 영화 보러 바람같이 갔다 올래?"],"e":"'우리 같이'에서 '같이'는 'together'의 의미를 갖는 부사이므로 앞말과 띄어 쓴다. '바람같이'의 '같이'는 '처럼'의 뜻을 갖는 조사이므로 앞말에 붙여 쓴다."},{"q":"하지도못하면서아는척하네.","answers":["하지도 못하면서 아는 척하네.","하지도 못하면서 아는척하네."],"e":"'척하다'는 보조용언이므로 띄어 쓰는 것이 원칙이지만, 보조용언을 앞말에 붙여 쓸 수 있다는 규정에 따라 붙여 쓰는 것도 허용된다."},{"q":"아무래도눈이올성싶어.","answers":["아무래도 눈이 올 성싶어.","아무래도 눈이 올성싶어."],"e":"'성싶다'는 보조용언이므로 앞말과 띄어 쓰는 것이 원칙이지만, 보조용언을 앞말에 붙여 쓸 수 있다는 규정에 따라 '볼성싶어'처럼 붙여 쓰는 것도 허용된다."}];
+let qs=[],idx=0,good=0,bad=0,selected=new Set(),locked=false;
+function shuffle(a){let b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]))}
+function compact(s){return s.replace(/\s+/g,"")}
+function gapSet(answer){let out=new Set(),pos=0;for(const ch of answer){if(ch===" ") out.add(pos-1); else pos++}return out}
+function sameSet(a,b){return a.size===b.size&&[...a].every(x=>b.has(x))}
+function startQuiz(){qs=shuffle(BANK);idx=0;good=0;bad=0;document.getElementById("start").classList.add("hidden");document.getElementById("finish").classList.add("hidden");document.getElementById("quiz").classList.remove("hidden");render()}
+function restartQuiz(){startQuiz()}
+function render(){
+ locked=false;selected=new Set();
+ const q=qs[idx],raw=q.q.replace(/\s+/g,""),box=document.getElementById("sentence");box.innerHTML="";
+ [...raw].forEach((ch,i)=>{
+  const c=document.createElement("span");c.className="char";c.textContent=ch;box.appendChild(c);
+  if(i<raw.length-1){const g=document.createElement("span");g.className="gap";g.dataset.i=i;g.onclick=()=>{if(locked)return;const n=+g.dataset.i;selected.has(n)?selected.delete(n):selected.add(n);g.classList.toggle("active")};box.appendChild(g)}
+ });
+ document.getElementById("num").textContent=`${idx+1} / ${qs.length}`;
+ document.getElementById("score").textContent=`정답 ${good} · 오답 ${bad}`;
+ document.getElementById("bar").style.width=`${(idx+1)/qs.length*100}%`;
+ const fb=document.getElementById("feedback");fb.className="feedback";fb.innerHTML="";
+ document.getElementById("check").classList.remove("hidden");document.getElementById("next").classList.add("hidden");
+ document.getElementById("next").textContent=idx===qs.length-1?"결과 보기":"다음 문제";
+}
+function studentAnswer(raw){let s="";[...raw].forEach((ch,i)=>{s+=ch;if(selected.has(i))s+=" "});return s}
+function checkAnswer(){
+ if(locked)return;locked=true;
+ const q=qs[idx],raw=q.q.replace(/\s+/g,"");
+ const valid=q.answers.some(a=>sameSet(selected,gapSet(a)));
+ const mine=studentAnswer(raw);
+ if(valid)good++;else bad++;
+ const fb=document.getElementById("feedback");fb.className="feedback "+(valid?"ok":"no");
+ let body=valid?"<b>정답입니다.</b>":"<b>틀렸습니다.</b>";
+ body+=`<div class="answerline">정답: ${esc(q.answers[0])}</div>`;
+ if(q.answers.length>1) body+=`<div class="answerline">복수 정답: ${esc(q.answers.slice(1).join(" / "))}</div>`;
+ if(q.e) body+=`<div class="explain">${esc(q.e)}</div>`;
+ fb.innerHTML=body;
+ document.getElementById("score").textContent=`정답 ${good} · 오답 ${bad}`;
+ document.getElementById("check").classList.add("hidden");document.getElementById("next").classList.remove("hidden");
+}
+function nextQuestion(){
+ idx++;
+ if(idx>=qs.length){document.getElementById("quiz").classList.add("hidden");document.getElementById("finish").classList.remove("hidden");document.getElementById("final").innerHTML=`총 ${qs.length}문제 중 <b>${good}문제 정답</b><br>정답률 ${Math.round(good/qs.length*100)}%`;}
+ else render();
+}
+</script>
+</body></html>
